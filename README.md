@@ -15,11 +15,11 @@ go get github.com/obsidianreachltd/pyrokv-go
 package main
 
 import (
-	"pyrokvgo"
+	"pyrokv-go"
 )
 
 func main() {
-	kv, err := pyrokvgo.NewPyroKVClient()
+	kv, err := pyrokv-go.NewPyroKVClient()
 	if err != nil {
 		panic(err)
 	}

@@ -2,7 +2,7 @@ package frame
 
 import (
 	"errors"
-	"pyrokvgo/internal/header"
+	"pyrokv-go/internal/header"
 )
 
 type Frame struct {
