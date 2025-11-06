@@ -2,7 +2,8 @@ package frame
 
 import (
 	"errors"
-	"pyrokv-go/internal/header"
+
+	"github.com/obsidianreachltd/pyrokv-go/internal/header"
 )
 
 type Frame struct {

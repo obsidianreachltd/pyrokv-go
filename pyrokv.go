@@ -6,13 +6,14 @@ import (
 	"log"
 	"net"
 	"os"
-	"pyrokv-go/internal/errors"
-	"pyrokv-go/internal/frame"
-	"pyrokv-go/internal/header"
-	"pyrokv-go/internal/kvstore"
-	"pyrokv-go/internal/payload"
 	"sync"
 	"time"
+
+	"github.com/obsidianreachltd/pyrokv-go/internal/errors"
+	"github.com/obsidianreachltd/pyrokv-go/internal/frame"
+	"github.com/obsidianreachltd/pyrokv-go/internal/header"
+	"github.com/obsidianreachltd/pyrokv-go/internal/kvstore"
+	"github.com/obsidianreachltd/pyrokv-go/internal/payload"
 )
 
 type PyroKVClient struct {
