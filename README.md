@@ -9,17 +9,18 @@ This library provides client access to a PyroKV key-value database.
 ```bash
 go get github.com/obsidianreachltd/pyrokv-go
 ```
+
 ## Example
 
 ```go
 package main
 
 import (
-	"pyrokv-go"
+	pyrokv "github.com/obsidianreachltd/pyrokv-go"
 )
 
 func main() {
-	kv, err := pyrokv-go.NewPyroKVClient()
+	kv, err := pyrokv.NewPyroKVClient()
 	if err != nil {
 		panic(err)
 	}
@@ -34,3 +35,7 @@ func main() {
 	println("Value for 'my_key':", res)
 }
 ```
+
+### Supported Types and Encoding
+
+This library supports encoding standard types (int, string, bool, etc.) as well as any JSON marshalable object (e.g. a struct).

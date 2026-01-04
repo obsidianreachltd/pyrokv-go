@@ -1,14 +1,13 @@
 package pyrokvgo
 
 import (
-	"bytes"
-	"encoding/gob"
 	"log"
 	"net"
 	"os"
 	"sync"
 	"time"
 
+	"github.com/obsidianreachltd/pyrokv-go/internal/encoder"
 	"github.com/obsidianreachltd/pyrokv-go/internal/errors"
 	"github.com/obsidianreachltd/pyrokv-go/internal/frame"
 	"github.com/obsidianreachltd/pyrokv-go/internal/header"
@@ -26,11 +25,11 @@ type PyroKVClient struct {
 const timeoutDuration = 2 * time.Second
 
 func NewPyroKVClient() (*PyroKVClient, error) {
-	host, exists := os.LookupEnv("MCQUEEN_HOST")
+	host, exists := os.LookupEnv("PYROKV_HOST")
 	if !exists {
 		host = "localhost"
 	}
-	port, exists := os.LookupEnv("MCQUEEN_PORT")
+	port, exists := os.LookupEnv("PYROKV_PORT")
 	if !exists {
 		port = "8001"
 	}
@@ -102,14 +101,12 @@ func (c *PyroKVClient) SetWithExpiry(key string, value any, expiry time.Time) er
 	reqID := c.incrementID()
 
 	// Serialize value
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	if err := enc.Encode(value); err != nil {
+	b, err := encoder.Marshal(value)
+	if err != nil {
 		return err
 	}
-	valueBytes := buf.Bytes()
 
-	pyld := payload.NewSetRequestPayload(key, valueBytes, expiry.Unix())
+	pyld := payload.NewSetRequestPayload(key, b, expiry.Unix())
 	hd := &header.Header{
 		Magic:      header.MAGIC,
 		Version:    header.VERSION,
@@ -222,9 +219,7 @@ func (c *PyroKVClient) Get(key string, value any) error {
 	if err != nil {
 		return err
 	}
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	if err := dec.Decode(value); err != nil {
+	if err := encoder.Unmarshal(data, value); err != nil {
 		return err
 	}
 	return nil

@@ -18,6 +18,7 @@ const (
 	OpCode_Exists = 0x06
 	OpCode_Ping   = 0x10
 	OpCode_Info   = 0x11
+	OpCode_Auth   = 0x20
 )
 
 const (
