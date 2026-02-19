@@ -24,7 +24,7 @@ type PyroKVClient struct {
 
 const timeoutDuration = 2 * time.Second
 
-func NewPyroKVClient() (*PyroKVClient, error) {
+func NewPyroKVClient(password *string) (*PyroKVClient, error) {
 	host, exists := os.LookupEnv("PYROKV_HOST")
 	if !exists {
 		host = "localhost"
@@ -44,6 +44,15 @@ func NewPyroKVClient() (*PyroKVClient, error) {
 	}
 	// Start listening for responses
 	go client.listenResponses()
+
+	// Authenticate if password is provided
+	if password != nil {
+		if err := client.Authenticate(*password); err != nil {
+			client.Close()
+			return nil, err
+		}
+	}
+
 	return client, nil
 }
 
@@ -95,6 +104,56 @@ func (c *PyroKVClient) checkHeaderIsResponseWithNoError(fr *frame.Frame) error {
 		return errors.ErrorFromResponsePayload(fr.Payload[0])
 	}
 	return nil
+}
+
+func (c *PyroKVClient) Authenticate(password string) error {
+	reqID := c.incrementID()
+
+	pyld := payload.NewAuthRequestPayload(password)
+	hd := &header.Header{
+		Magic:      header.MAGIC,
+		Version:    header.VERSION,
+		Operation:  header.OpCode_Auth,
+		FrameType:  header.FrameType_Request,
+		Flags:      0,
+		ReqID:      reqID,
+		PayloadLen: uint32(len(pyld)),
+	}
+	fr := frame.NewFrame(hd, pyld)
+	raw := fr.ToBytes()
+	respCh := make(chan *frame.Frame, 1)
+	c.mtx.Lock()
+	c.requests[reqID] = respCh
+	c.mtx.Unlock()
+
+	if _, err := c.conn.Write(raw); err != nil {
+		c.mtx.Lock()
+		delete(c.requests, reqID)
+		c.mtx.Unlock()
+		return err
+	}
+
+	// wait for response OR timeout; no default!
+	timer := time.NewTimer(timeoutDuration)
+	defer timer.Stop()
+
+	select {
+	case res := <-respCh:
+		c.mtx.Lock()
+		delete(c.requests, reqID)
+		c.mtx.Unlock()
+
+		if err := c.checkHeaderIsResponseWithNoError(res); err != nil {
+			return err
+		}
+		return nil
+
+	case <-timer.C:
+		c.mtx.Lock()
+		delete(c.requests, reqID)
+		c.mtx.Unlock()
+		return errors.ErrorFromResponsePayload(errors.ErrClientTimeout)
+	}
 }
 
 func (c *PyroKVClient) SetWithExpiry(key string, value any, expiry time.Time) error {

@@ -1,5 +1,18 @@
 package payload
 
+func NewAuthRequestPayload(password string) []byte {
+	keyLenU32 := uint32(len(password))
+	payload := make([]byte, 4+keyLenU32)
+	// Key Length
+	payload[0] = byte(keyLenU32 >> 24)
+	payload[1] = byte((keyLenU32 >> 16) & 0xFF)
+	payload[2] = byte((keyLenU32 >> 8) & 0xFF)
+	payload[3] = byte(keyLenU32 & 0xFF)
+	// Key
+	copy(payload[4:], password)
+	return payload
+}
+
 func NewSetRequestPayload(key string, value []byte, expiry int64) []byte {
 	keyLenU32 := uint32(len(key))
 	valueLenU32 := uint32(len(value))

@@ -7,6 +7,8 @@ const (
 	ErrKeyValueTooLarge = 0x03
 	ErrBadRequest       = 0x04
 	ErrInternalServer   = 0x05
+	ErrUnauthorized     = 0x06
+	ErrServerBusy       = 0x07
 	// Client Side Error Codes
 	ErrClientTimeout = 0xF1
 	ErrClientClosed  = 0xF2
@@ -40,6 +42,10 @@ func ErrorFromResponsePayload(payload byte) error {
 		return NewPyroKVError(ErrBadRequest, "bad request")
 	case ErrInternalServer:
 		return NewPyroKVError(ErrInternalServer, "internal server error")
+	case ErrUnauthorized:
+		return NewPyroKVError(ErrUnauthorized, "unauthorized")
+	case ErrServerBusy:
+		return NewPyroKVError(ErrServerBusy, "server busy")
 	case ErrClientTimeout:
 		return NewPyroKVError(ErrClientTimeout, "client timeout")
 	case ErrClientClosed:
@@ -74,6 +80,14 @@ func IsBadRequestError(err error) bool {
 
 func IsInternalServerError(err error) bool {
 	return isPyroKVError(err, ErrInternalServer)
+}
+
+func IsUnauthorizedError(err error) bool {
+	return isPyroKVError(err, ErrUnauthorized)
+}
+
+func IsServerBusyError(err error) bool {
+	return isPyroKVError(err, ErrServerBusy)
 }
 
 func IsClientTimeoutError(err error) bool {
